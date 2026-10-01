@@ -18,20 +18,20 @@ import { UserRole } from '../../types';
 import { VertofiLogo } from '../../components/common/VertofiLogo';
 
 export const OnboardingWizard: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
-  const { completeOnboarding, currentUser } = useAuth();
+  const { completeOnboarding, currentUser, currentOrg } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
 
   const [formData, setFormData] = useState({
-    fullName: currentUser.name || 'CA Vikramaditya Sharma',
-    email: currentUser.email || 'vikram.sharma@vertofi-ca.com',
+    fullName: currentUser.name || '',
+    email: currentUser.email || '',
     role: (currentUser.role || 'CA') as UserRole,
     specializations: ['Direct Tax & Transfer Pricing', 'Statutory Audits'],
-    membershipNumber: 'FCA-084920',
-    copNumber: 'COP-409218',
-    firmName: 'Sharma & Venkatesh Chartered Accountants',
-    firmGstin: '27AAAFS9281G1Z3',
-    invitedEmails: ['rohan.mehta@vertofi-ca.com', 'ananya.cs@vertofi-ca.com'],
-    selectedClients: ['Acme FinTech Technologies Pvt Ltd', 'Nexus Retail Tech Ltd'],
+    membershipNumber: currentUser.membershipNumber || '',
+    copNumber: '',
+    firmName: currentOrg.name || '',
+    firmGstin: '',
+    invitedEmails: [] as string[],
+    selectedClients: [] as string[],
     notificationPref: { email: true, sms: true, inApp: true, whatsapp: false }
   });
 

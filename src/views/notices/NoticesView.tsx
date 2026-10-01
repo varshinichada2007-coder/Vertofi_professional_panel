@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AlertOctagon,
   Clock,
@@ -12,14 +12,24 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import { StatutoryNotice } from '../../types';
 
 export const NoticesView: React.FC = () => {
+  const { currentUser } = useAuth();
   const { statutoryNotices, updateNoticeStatus, showToast } = useApp();
-  const [selectedNotice, setSelectedNotice] = useState<StatutoryNotice>(statutoryNotices[0]);
+  const [selectedNotice, setSelectedNotice] = useState<StatutoryNotice | undefined>(statutoryNotices[0]);
   const [replyText, setReplyText] = useState(statutoryNotices[0]?.responseDraft || '');
 
+  useEffect(() => {
+    if (!selectedNotice && statutoryNotices.length > 0) {
+      setSelectedNotice(statutoryNotices[0]);
+      setReplyText(statutoryNotices[0]?.responseDraft || '');
+    }
+  }, [statutoryNotices, selectedNotice]);
+
   const handleSubmitResponse = () => {
+    if (!selectedNotice) return;
     updateNoticeStatus(selectedNotice.id, 'READY_FOR_SUBMISSION');
     showToast(
       'Notice Reply Sealed & Ready for CA Signoff',
@@ -51,11 +61,20 @@ export const NoticesView: React.FC = () => {
       </div>
 
       {/* Main Notice Grid */}
+      {statutoryNotices.length === 0 ? (
+        <div className="glass-panel" style={{ padding: '48px 24px', textAlign: 'center' }}>
+          <CheckCircle2 size={48} color="var(--success-500)" style={{ margin: '0 auto 16px' }} />
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px' }}>Clean Statutory Record</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', maxWidth: '480px', margin: '0 auto' }}>
+            No pending DRC-01 notices, 148A reassessment summons, or MCA inquiries logged in your database.
+          </p>
+        </div>
+      ) : (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px', alignItems: 'flex-start' }}>
         {/* Left: Notices List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {statutoryNotices.map((notice) => {
-            const isSelected = selectedNotice.id === notice.id;
+            const isSelected = selectedNotice?.id === notice.id;
             return (
               <div
                 key={notice.id}
@@ -128,7 +147,7 @@ export const NoticesView: React.FC = () => {
                 <button
                   onClick={() => {
                     setReplyText(
-                      `IN THE OFFICE OF THE SUPERINTENDENT OF CENTRAL GST, DIVISION SOUTH MUMBAI\n\nIN THE MATTER OF: M/s Nexus Retail Technologies Ltd\nGSTIN: 29AABCN5678K1Z2\nNOTICE REF: DRC-01/GST/2024/7719\n\nREPLY ON BEHALF OF ASSESSEE UNDER SECTION 73(1):\n\n1. That the assessee is a registered taxable person compliant with all statutory filings.\n2. In respect of the alleged ITC discrepancy of ₹8,42,000, all supplies were backed by tax-paid invoices, physical e-Way bills (#EWB-889104), and bank clearance via RTGS.\n3. The retrospective cancellation of supplier GSTIN cannot prejudice the bona fide recipient as ruled by Hon'ble High Court in M/s Suncraft Energy vs State of WB.\n\nDate: 2026-10-19\nAuthorized Signatory: CA Vikramaditya Sharma (FCA #084920)`
+                      `IN THE OFFICE OF THE SUPERINTENDENT OF CENTRAL GST, DIVISION SOUTH MUMBAI\n\nIN THE MATTER OF: M/s Nexus Retail Technologies Ltd\nGSTIN: 29AABCN5678K1Z2\nNOTICE REF: DRC-01/GST/2024/7719\n\nREPLY ON BEHALF OF ASSESSEE UNDER SECTION 73(1):\n\n1. That the assessee is a registered taxable person compliant with all statutory filings.\n2. In respect of the alleged ITC discrepancy of ₹8,42,000, all supplies were backed by tax-paid invoices, physical e-Way bills (#EWB-889104), and bank clearance via RTGS.\n3. The retrospective cancellation of supplier GSTIN cannot prejudice the bona fide recipient as ruled by Hon'ble High Court in M/s Suncraft Energy vs State of WB.\n\nDate: ${new Date().toISOString().split('T')[0]}\nAuthorized Signatory: ${currentUser.name || 'Lead Practitioner'} (${currentUser.membershipNumber ? `FCA #${currentUser.membershipNumber}` : 'Lead Partner'})`
                     );
                     showToast('AI Draft Inserted', 'Standard legal reply generated with statutory case laws.', 'success');
                   }}
@@ -162,6 +181,7 @@ export const NoticesView: React.FC = () => {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 };

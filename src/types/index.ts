@@ -12,11 +12,13 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   role: UserRole;
   roleTitle: string;
   avatar: string;
   firmName: string;
   membershipNumber?: string;
+  caIdNumber?: string; // Official CA ID No. used to connect to Vertofi Business Portal
   copNumber?: string; // Certificate of Practice
   specialization: string[];
   mfaEnabled: boolean;
@@ -381,15 +383,62 @@ export interface BhsReport {
   growthOpportunities: string[];
 }
 
+// Client Queries & Messages from Business Portal
+export interface QueryReply {
+  id: string;
+  senderName: string;
+  senderRole: 'CLIENT' | 'CA' | 'CMA' | 'CS' | 'CFO' | 'ACCOUNTANT' | 'AUDITOR';
+  senderAvatar?: string;
+  message: string;
+  timestamp: string;
+  attachments?: string[];
+}
+
+export interface ClientQuery {
+  id: string;
+  clientId: string;
+  clientName: string;
+  senderName: string;
+  senderRole: string;
+  senderEmail: string;
+  subject: string;
+  message: string;
+  category: 'TAX_CLARIFICATION' | 'INVOICE_DISPUTE' | 'GST_QUERY' | 'TDS_MISMATCH' | 'DOCUMENT_SUBMISSION' | 'GENERAL';
+  priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
+  createdAt: string;
+  caIdNumber: string; // The CA ID to whom query is routed
+  replies: QueryReply[];
+}
+
+// Business Portal Connection
+export interface ConnectedBusiness {
+  id: string;
+  businessName: string;
+  gstin: string;
+  pan: string;
+  cin?: string;
+  connectedViaCaId: string;
+  connectedAt: string;
+  status: 'CONNECTED' | 'PENDING_APPROVAL' | 'SYNCING';
+  lastSyncedAt: string;
+  annualTurnover: string;
+  contactPerson: string;
+  contactEmail: string;
+  contactPhone: string;
+  liveFeedCount: number;
+}
+
 // Notifications
 export interface AppNotification {
   id: string;
   title: string;
   message: string;
-  category: 'COMPLIANCE_DEADLINE' | 'APPROVAL_REQUEST' | 'CLIENT_DOC_REQUEST' | 'EXCEPTION' | 'NOTICE_DEADLINE' | 'PAYMENT' | 'RECONCILIATION' | 'FILING_UPDATE' | 'SYSTEM_SECURITY';
+  category: 'COMPLIANCE_DEADLINE' | 'APPROVAL_REQUEST' | 'CLIENT_DOC_REQUEST' | 'EXCEPTION' | 'NOTICE_DEADLINE' | 'PAYMENT' | 'RECONCILIATION' | 'FILING_UPDATE' | 'SYSTEM_SECURITY' | 'CLIENT_QUERY';
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   timestamp: string;
   isRead: boolean;
   actionLink?: string;
   clientId?: string;
+  queryId?: string;
 }

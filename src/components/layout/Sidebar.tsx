@@ -45,7 +45,20 @@ interface SidebarSection {
 }
 
 export const Sidebar: React.FC = () => {
-  const { activeView, setActiveView, tasks, approvals, riskExceptions, statutoryNotices, bankTransactions, clients, switchClient, currentClient } = useApp();
+  const {
+    activeView,
+    setActiveView,
+    tasks,
+    approvals,
+    riskExceptions,
+    statutoryNotices,
+    bankTransactions,
+    clients,
+    switchClient,
+    currentClient,
+    clientQueries,
+    setIsProfileModalOpen
+  } = useApp();
   const { currentUser, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -54,12 +67,15 @@ export const Sidebar: React.FC = () => {
   const openExceptionsCount = riskExceptions.filter((e) => e.status === 'OPEN' || e.status === 'INVESTIGATING').length;
   const openNoticesCount = statutoryNotices.filter((n) => n.status === 'OPEN' || n.status === 'IN_PROGRESS').length;
   const unreconciledTxnCount = bankTransactions.filter((b) => b.status === 'UNMATCHED' || b.status === 'EXCEPTION').length;
+  const openQueriesCount = clientQueries.filter((q) => q.status === 'OPEN').length;
 
   const sections: SidebarSection[] = [
     {
       title: 'WORKSPACE',
       items: [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'business-sync', label: 'Business Panel Sync', icon: Globe2 },
+        { id: 'queries', label: 'Client Queries', icon: MessageSquare, badge: openQueriesCount > 0 ? openQueriesCount : undefined, badgeColor: 'warning' },
         { id: 'tasks', label: 'My Tasks', icon: CheckSquare, badge: pendingTasksCount, badgeColor: 'warning' },
         { id: 'clients', label: 'Clients Directory', icon: Users }
       ]
@@ -93,13 +109,13 @@ export const Sidebar: React.FC = () => {
       title: 'INSIGHTS',
       items: [
         { id: 'analytics', label: 'Practice Analytics', icon: BarChart3 },
-        { id: 'ai-assistant', label: 'AI Assistant', icon: Sparkles, badge: 'AI', badgeColor: 'ai' },
         { id: 'bhs', label: 'Business Health (BHS)', icon: HeartPulse }
       ]
     },
     {
       title: 'SYSTEM',
       items: [
+        { id: 'profile', label: 'My Practice Profile', icon: UserPlus },
         { id: 'network', label: 'Professional Network', icon: Globe2 },
         { id: 'settings', label: 'Settings & RBAC', icon: Settings }
       ]
@@ -326,14 +342,28 @@ export const Sidebar: React.FC = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div
+              onClick={() => setIsProfileModalOpen(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                padding: '4px 6px',
+                borderRadius: '8px',
+                transition: 'background 0.15s ease',
+                flex: 1
+              }}
+              className="user-profile-hover"
+              title="Click to view full Profile & CA Credentials"
+            >
               <img
                 src={currentUser.avatar}
                 alt={currentUser.name}
                 style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #6366F1' }}
               />
               <div style={{ lineHeight: 1.2 }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#FFFFFF' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   {currentUser.name}
                 </div>
                 <div style={{ fontSize: '0.68rem', color: '#818CF8', fontWeight: 600 }}>
@@ -354,7 +384,8 @@ export const Sidebar: React.FC = () => {
                 color: '#EF4444',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                flexShrink: 0
               }}
             >
               <LogOut size={14} />
@@ -362,15 +393,31 @@ export const Sidebar: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.68rem', color: '#64748B' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10B981', fontWeight: 700 }}>
+            <span
+              onClick={() => setIsProfileModalOpen(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10B981', fontWeight: 700, cursor: 'pointer' }}
+              title="CA ID & DSC Verification details"
+            >
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981' }} />
-              DSC Class 3 Active
+              CA ID: {currentUser.caIdNumber || currentUser.membershipNumber || 'V-CA-84920'}
             </span>
-            <span>{currentUser.role} Workspace</span>
+            <span
+              onClick={() => setIsProfileModalOpen(true)}
+              style={{ color: '#818CF8', cursor: 'pointer', fontWeight: 600 }}
+            >
+              Profile ↗
+            </span>
           </div>
         </div>
       ) : (
-        <div style={{ padding: '12px 0', display: 'flex', justifyContent: 'center', borderTop: '1px solid #1E1C2B', backgroundColor: '#0F0E16' }}>
+        <div style={{ padding: '12px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', borderTop: '1px solid #1E1C2B', backgroundColor: '#0F0E16' }}>
+          <img
+            src={currentUser.avatar}
+            alt={currentUser.name}
+            onClick={() => setIsProfileModalOpen(true)}
+            style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #6366F1', cursor: 'pointer' }}
+            title="View Profile & CA Credentials"
+          />
           <button
             onClick={logout}
             title="Sign Out"
@@ -378,7 +425,7 @@ export const Sidebar: React.FC = () => {
               background: 'rgba(239, 68, 68, 0.12)',
               border: '1px solid rgba(239, 68, 68, 0.25)',
               borderRadius: '6px',
-              padding: '8px',
+              padding: '6px',
               cursor: 'pointer',
               color: '#EF4444',
               display: 'flex',
@@ -386,7 +433,7 @@ export const Sidebar: React.FC = () => {
               justifyContent: 'center'
             }}
           >
-            <LogOut size={16} />
+            <LogOut size={14} />
           </button>
         </div>
       )}

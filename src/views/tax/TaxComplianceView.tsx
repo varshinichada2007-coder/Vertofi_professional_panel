@@ -22,6 +22,13 @@ export const TaxComplianceView: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'GST' | 'TDS' | 'CALENDAR' | 'ITC_RECON'>('GST');
 
+  // ── Computed stats from real data ──
+  const totalOutwardLiability = gstRecords.reduce((sum, r) => sum + (r.liabilityCalculated || 0), 0);
+  const totalAvailableITC = gstRecords.reduce((sum, r) => sum + (r.itcAvailable || 0), 0);
+  const netCashPayable = Math.max(0, totalOutwardLiability - totalAvailableITC);
+  const totalITCMismatch = gstRecords.reduce((sum, r) => sum + (r.itcMismatchAmount || 0), 0);
+  const mismatchSuppliers = gstRecords.filter((r) => r.itcMismatchAmount > 0).length;
+
   return (
     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Header */}
@@ -76,23 +83,39 @@ export const TaxComplianceView: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
             <div className="glass-panel" style={{ padding: '16px' }}>
               <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>OUTWARD TAX LIABILITY</div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px' }}>₹34,20,000</div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '2px' }}>CGST: ₹17.1L | SGST: ₹17.1L</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px' }}>
+                {totalOutwardLiability > 0 ? `₹${totalOutwardLiability.toLocaleString('en-IN')}` : '—'}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                {totalOutwardLiability > 0 ? `CGST: ₹${(totalOutwardLiability / 2).toLocaleString('en-IN')} | SGST: ₹${(totalOutwardLiability / 2).toLocaleString('en-IN')}` : 'No GST filings yet'}
+              </div>
             </div>
             <div className="glass-panel" style={{ padding: '16px' }}>
               <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>AVAILABLE ITC (GSTR-2B)</div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--success-500)' }}>₹21,80,000</div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '2px' }}>98.4% Matched with Inward Ledger</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--success-500)' }}>
+                {totalAvailableITC > 0 ? `₹${totalAvailableITC.toLocaleString('en-IN')}` : '—'}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                {gstRecords.length > 0 ? 'From GSTR-2B reconciliation' : 'Run GSTR-2B recon to see ITC'}
+              </div>
             </div>
             <div className="glass-panel" style={{ padding: '16px' }}>
               <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>NET CASH PAYABLE (TABLE 6.1)</div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--warning-500)' }}>₹12,40,000</div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--danger-500)', marginTop: '2px' }}>Due 20th Oct 2024</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--warning-500)' }}>
+                {netCashPayable > 0 ? `₹${netCashPayable.toLocaleString('en-IN')}` : '—'}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--danger-500)', marginTop: '2px' }}>
+                {netCashPayable > 0 ? 'Due by 20th of filing month' : 'No pending liability'}
+              </div>
             </div>
             <div className="glass-panel" style={{ padding: '16px' }}>
               <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>QUARANTINED ITC MISMATCH</div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--danger-500)' }}>₹24,500</div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>2 Suppliers Flagged</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--danger-500)' }}>
+                {totalITCMismatch > 0 ? `₹${totalITCMismatch.toLocaleString('en-IN')}` : '—'}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                {mismatchSuppliers > 0 ? `${mismatchSuppliers} Supplier${mismatchSuppliers > 1 ? 's' : ''} Flagged` : 'No mismatches detected'}
+              </div>
             </div>
           </div>
 

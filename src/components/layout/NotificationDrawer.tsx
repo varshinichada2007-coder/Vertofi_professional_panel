@@ -8,7 +8,8 @@ import {
   FileCheck,
   CreditCard,
   Building,
-  ArrowRight
+  ArrowRight,
+  MessageSquare
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
@@ -23,7 +24,7 @@ export const NotificationDrawer: React.FC = () => {
     setActiveView
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'ALL' | 'UNREAD' | 'COMPLIANCE' | 'APPROVALS'>('ALL');
+  const [activeTab, setActiveTab] = useState<'ALL' | 'UNREAD' | 'COMPLIANCE' | 'APPROVALS' | 'QUERIES'>('ALL');
 
   if (!isNotificationDrawerOpen) return null;
 
@@ -31,11 +32,14 @@ export const NotificationDrawer: React.FC = () => {
     if (activeTab === 'UNREAD') return !n.isRead;
     if (activeTab === 'COMPLIANCE') return n.category === 'COMPLIANCE_DEADLINE' || n.category === 'NOTICE_DEADLINE';
     if (activeTab === 'APPROVALS') return n.category === 'APPROVAL_REQUEST';
+    if (activeTab === 'QUERIES') return n.category === 'CLIENT_QUERY';
     return true;
   });
 
   const getIcon = (category: string) => {
     switch (category) {
+      case 'CLIENT_QUERY':
+        return <MessageSquare size={16} color="var(--primary-600)" />;
       case 'COMPLIANCE_DEADLINE':
       case 'NOTICE_DEADLINE':
         return <Clock size={16} color="var(--danger-500)" />;
@@ -119,6 +123,7 @@ export const NotificationDrawer: React.FC = () => {
                     else if (notif.category === 'COMPLIANCE_DEADLINE') setActiveView('tax');
                     else if (notif.category === 'NOTICE_DEADLINE') setActiveView('notices');
                     else if (notif.category === 'EXCEPTION') setActiveView('exceptions');
+                    else if (notif.category === 'CLIENT_QUERY') setActiveView('queries');
                     setIsNotificationDrawerOpen(false);
                   }}
                   style={{

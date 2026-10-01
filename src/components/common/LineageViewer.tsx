@@ -13,6 +13,7 @@ import {
   Layers,
   Info
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export interface LineageStep {
   id: string;
@@ -31,6 +32,9 @@ export const LineageViewer: React.FC<{
   steps?: LineageStep[];
   transactionId?: string;
 }> = ({ steps, transactionId }) => {
+  const { currentUser } = useAuth();
+  const userName = currentUser?.name || 'Authorized Auditor';
+
   const defaultSteps: LineageStep[] = [
     {
       id: 'step_1',
@@ -86,7 +90,7 @@ export const LineageViewer: React.FC<{
       title: '1-Click Auto Ledger Matching',
       referenceCode: 'REC-MATCH-4412',
       timestamp: '2026-10-12 14:30 IST',
-      performedBy: 'CA Vikramaditya Sharma',
+      performedBy: userName,
       role: 'CA / Senior Partner',
       status: 'VERIFIED',
       details: '100% confidence match between Bank Feed & Invoice #INV-2024-0891.',
@@ -98,7 +102,7 @@ export const LineageViewer: React.FC<{
       title: 'Journal Voucher Posted',
       referenceCode: 'JV-2024-101',
       timestamp: '2026-10-12 14:35 IST',
-      performedBy: 'CA Vikramaditya Sharma',
+      performedBy: userName,
       role: 'CA',
       status: 'VERIFIED',
       details: 'Debited Bank 1001, Credited Sundry Debtors 1003. Ledger locked.',
@@ -110,7 +114,7 @@ export const LineageViewer: React.FC<{
       title: 'Portal Filing & ARN Acknowledged',
       referenceCode: 'ARN-AA2709240182910',
       timestamp: '2026-10-15 16:40 IST',
-      performedBy: 'CA Vikramaditya Sharma',
+      performedBy: userName,
       role: 'CA',
       status: 'VERIFIED',
       details: 'Included in Table 4A (B2B Supplies). Government ARN receipt sealed.',

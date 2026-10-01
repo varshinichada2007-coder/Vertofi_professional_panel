@@ -246,9 +246,9 @@ export const SettingsView: React.FC = () => {
       {activeTab === 'SUBSCRIPTION' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
           {[
-            { name: 'Starter', clients: 'Up to 5 Clients', users: '2 Users', ai: 'Basic AI Reconciliation', isCurrent: false },
-            { name: 'Professional', clients: 'Up to 25 Clients', users: '10 Users', ai: 'Full AI Assistant & Notice Drafter', isCurrent: false },
-            { name: 'Enterprise', clients: 'Unlimited Clients', users: 'Unlimited Users', ai: 'Dedicated Copilot, Full Forensic Lineage & SLA', isCurrent: true }
+            { name: 'Starter', clients: 'Up to 5 Clients', users: '2 Users', ai: 'Automated Bank Reconciliation', isCurrent: false },
+            { name: 'Professional', clients: 'Up to 25 Clients', users: '10 Users', ai: 'Automated Tax & Notice Management', isCurrent: false },
+            { name: 'Enterprise', clients: 'Unlimited Clients', users: 'Unlimited Users', ai: 'Full Multi-Panel Sync, Forensic Lineage & Priority SLA', isCurrent: true }
           ].map((plan, i) => (
             <div
               key={i}

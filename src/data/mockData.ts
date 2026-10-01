@@ -16,7 +16,9 @@ import {
   ApprovalItem,
   AuditLogItem,
   BhsReport,
-  AppNotification
+  AppNotification,
+  ClientQuery,
+  ConnectedBusiness
 } from '../types';
 
 export const mockUsers: User[] = [
@@ -1284,7 +1286,7 @@ export const mockNotifications: AppNotification[] = [
   {
     id: 'notif_03',
     title: 'Statutory Notice DRC-01 Response Drafted',
-    message: 'AI Assistant generated initial legal reply draft for GST Notice DRC-01.',
+    message: 'Legal Compliance team prepared initial reply draft for GST Notice DRC-01.',
     category: 'NOTICE_DEADLINE',
     priority: 'MEDIUM',
     timestamp: '2 hours ago',
@@ -1302,3 +1304,121 @@ export const mockNotifications: AppNotification[] = [
     clientId: 'cli_01'
   }
 ];
+
+export const mockConnectedBusinesses: ConnectedBusiness[] = [
+  {
+    id: 'biz_01',
+    businessName: 'Acme FinTech Technologies Private Limited',
+    gstin: '27AABCA1234F1Z8',
+    pan: 'AABCA1234F',
+    cin: 'U72900MH2021PTC361284',
+    connectedViaCaId: 'V-CA-84920',
+    connectedAt: '2024-04-01',
+    status: 'CONNECTED',
+    lastSyncedAt: '2 minutes ago',
+    annualTurnover: '₹42.50 Cr',
+    contactPerson: 'Arunav Sengupta (Director)',
+    contactEmail: 'arunav@acmefintech.in',
+    contactPhone: '+91 98201 11223',
+    liveFeedCount: 142
+  },
+  {
+    id: 'biz_02',
+    businessName: 'Nexus Retail Technologies India LLP',
+    gstin: '29ABCDE5678G1Z2',
+    pan: 'ABCDE5678G',
+    connectedViaCaId: 'V-CA-84920',
+    connectedAt: '2024-05-15',
+    status: 'CONNECTED',
+    lastSyncedAt: '12 minutes ago',
+    annualTurnover: '₹18.20 Cr',
+    contactPerson: 'Meera Nambiar (Managing Partner)',
+    contactEmail: 'meera@nexusretail.com',
+    contactPhone: '+91 98450 99881',
+    liveFeedCount: 89
+  },
+  {
+    id: 'biz_03',
+    businessName: 'Meridian Global Health Private Limited',
+    gstin: '27AABCM9012H1Z5',
+    pan: 'AABCM9012H',
+    cin: 'U85110MH2019PTC320194',
+    connectedViaCaId: 'V-CA-84920',
+    connectedAt: '2024-06-10',
+    status: 'CONNECTED',
+    lastSyncedAt: '1 hour ago',
+    annualTurnover: '₹95.00 Cr',
+    contactPerson: 'Dr. Siddharth Rao (CFO)',
+    contactEmail: 'siddharth@meridianhealth.co.in',
+    contactPhone: '+91 97690 44556',
+    liveFeedCount: 310
+  }
+];
+
+export const mockClientQueries: ClientQuery[] = [
+  {
+    id: 'qry_01',
+    clientId: 'cli_01',
+    clientName: 'Acme FinTech Technologies Private Limited',
+    senderName: 'Arunav Sengupta',
+    senderRole: 'Managing Director (Client Portal)',
+    senderEmail: 'arunav@acmefintech.in',
+    subject: 'Urgent clarification on Export Invoice #INV-2024-001 LUT eligibility',
+    message: 'Hello CA Vikramaditya, we received payment in foreign exchange (USD 12,500) for offshore consulting under Letter of Undertaking (LUT). Could you please verify if any reverse charge mechanism applies or if our GSTR-1 Table 6A entry is compliant?',
+    category: 'GST_QUERY',
+    priority: 'HIGH',
+    status: 'OPEN',
+    createdAt: '10 minutes ago',
+    caIdNumber: 'V-CA-84920',
+    replies: [
+      {
+        id: 'rep_01_1',
+        senderName: 'Arunav Sengupta',
+        senderRole: 'CLIENT',
+        message: 'Attaching the FIRC (Foreign Inward Remittance Certificate) from CitiBank for your verification.',
+        timestamp: '10 minutes ago'
+      }
+    ]
+  },
+  {
+    id: 'qry_02',
+    clientId: 'cli_02',
+    clientName: 'Nexus Retail Technologies India LLP',
+    senderName: 'Meera Nambiar',
+    senderRole: 'Managing Partner (Business Portal)',
+    senderEmail: 'meera@nexusretail.com',
+    subject: 'TDS Rate applicability for Cloud Hosting AWS Invoices under Section 194J vs 194C',
+    message: 'We received an annual cloud server bill of ₹14,80,000 from Amazon Web Services India. Our finance team deducted TDS @ 2% under 194C, but vendor claims it falls under 194J (10%). Please advise the correct statutory position before tomorrow deposit due date.',
+    category: 'TDS_MISMATCH',
+    priority: 'CRITICAL',
+    status: 'OPEN',
+    createdAt: '35 minutes ago',
+    caIdNumber: 'V-CA-84920',
+    replies: []
+  },
+  {
+    id: 'qry_03',
+    clientId: 'cli_03',
+    clientName: 'Meridian Global Health Private Limited',
+    senderName: 'Dr. Siddharth Rao',
+    senderRole: 'CFO (Business Portal)',
+    senderEmail: 'siddharth@meridianhealth.co.in',
+    subject: 'DRC-01 Notice explanation review & board sign-off',
+    message: 'We have reviewed the draft legal response prepared in Vertofi Legal bridge for DRC-01. When can we schedule the final review before uploading on GST portal?',
+    category: 'TAX_CLARIFICATION',
+    priority: 'MEDIUM',
+    status: 'IN_PROGRESS',
+    createdAt: '2 hours ago',
+    caIdNumber: 'V-CA-84920',
+    replies: [
+      {
+        id: 'rep_03_1',
+        senderName: 'CA Vikramaditya Sharma',
+        senderRole: 'CA',
+        message: 'Dr. Rao, I have verified the GSTR-2B ITC reconciliation schedule. The response is ready and complies with Section 73(9). Let us connect at 3:30 PM today.',
+        timestamp: '1 hour ago'
+      }
+    ]
+  }
+];
+

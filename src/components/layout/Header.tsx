@@ -28,8 +28,8 @@ export const Header: React.FC = () => {
     financialPeriod,
     setFinancialPeriod,
     setIsSearchModalOpen,
-    setIsAiDrawerOpen,
     setIsNotificationDrawerOpen,
+    setIsProfileModalOpen,
     notifications,
     theme,
     toggleTheme,
@@ -53,13 +53,13 @@ export const Header: React.FC = () => {
   ];
 
   const roleList: { role: UserRole; title: string; desc: string }[] = [
-    { role: 'CA', title: 'CA Vikramaditya Sharma', desc: 'Senior Partner & Direct Tax Head' },
-    { role: 'CMA', title: 'CMA Rajeshwari Nair', desc: 'Cost & Management Consultant' },
-    { role: 'CS', title: 'CS Ananya Deshmukh', desc: 'Company Secretary & MCA Compliance' },
-    { role: 'CFO', title: 'Divya Krishnan', desc: 'Fractional CFO & Treasury Head' },
-    { role: 'ACCOUNTANT', title: 'Rohan Mehta', desc: 'Senior Financial Executive' },
-    { role: 'AUDITOR', title: 'Suresh Iyer', desc: 'Lead Statutory & CARO Reviewer' },
-    { role: 'INTERNAL_ADMIN', title: 'Priya Sen', desc: 'Practice Operations Admin' }
+    { role: 'CA', title: currentUser.role === 'CA' ? currentUser.name || 'Chartered Accountant' : 'Chartered Accountant', desc: 'Senior Partner & Direct Tax Head' },
+    { role: 'CMA', title: currentUser.role === 'CMA' ? currentUser.name || 'Cost & Management Consultant' : 'Cost & Management Consultant', desc: 'Cost & Management CMA' },
+    { role: 'CS', title: currentUser.role === 'CS' ? currentUser.name || 'Company Secretary' : 'Company Secretary', desc: 'Company Secretary & MCA Compliance' },
+    { role: 'CFO', title: currentUser.role === 'CFO' ? currentUser.name || 'Fractional CFO' : 'Fractional CFO', desc: 'Treasury Head & Fractional CFO' },
+    { role: 'ACCOUNTANT', title: currentUser.role === 'ACCOUNTANT' ? currentUser.name || 'Senior Accountant' : 'Senior Accountant', desc: 'Senior Financial Executive' },
+    { role: 'AUDITOR', title: currentUser.role === 'AUDITOR' ? currentUser.name || 'Statutory Auditor' : 'Statutory Auditor', desc: 'Lead Statutory & CARO Reviewer' },
+    { role: 'INTERNAL_ADMIN', title: currentUser.role === 'INTERNAL_ADMIN' ? currentUser.name || 'Operations Admin' : 'Operations Admin', desc: 'Practice Operations Admin' }
   ];
 
   return (
@@ -178,10 +178,10 @@ export const Header: React.FC = () => {
             <Layers size={16} color={currentClient.status === 'HIGH_RISK' ? 'var(--danger-500)' : 'var(--info-500)'} />
             <div style={{ textAlign: 'left' }}>
               <div style={{ fontSize: '0.8rem', fontWeight: 700, maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {currentClient.name}
+                {currentClient?.name || 'Select Client Entity'}
               </div>
             </div>
-            {currentClient.status === 'HIGH_RISK' && (
+            {currentClient?.status === 'HIGH_RISK' && (
               <span className="badge badge-danger" style={{ fontSize: '0.62rem' }}>Risk</span>
             )}
             <ChevronDown size={14} color="var(--text-muted)" />
@@ -213,25 +213,40 @@ export const Header: React.FC = () => {
                   View All ({clients.length})
                 </span>
               </div>
-              {clients.map((client) => (
-                <div
-                  key={client.id}
-                  onClick={() => {
-                    switchClient(client.id);
-                    setIsClientDropdownOpen(false);
-                  }}
-                  style={{
-                    padding: '8px 10px',
-                    borderRadius: 'var(--radius-sm)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: '2px',
-                    backgroundColor: client.id === currentClient.id ? 'var(--bg-subtle)' : 'transparent'
-                  }}
-                  className="glass-panel-hover"
-                >
+              {clients.length === 0 ? (
+                <div style={{ padding: '16px 10px', textAlign: 'center', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  <div>No client entities onboarded yet.</div>
+                  <button
+                    onClick={() => {
+                      setActiveView('client-360');
+                      setIsClientDropdownOpen(false);
+                    }}
+                    className="btn btn-primary btn-sm"
+                    style={{ marginTop: '10px', fontSize: '0.72rem', width: '100%' }}
+                  >
+                    + Onboard First Client
+                  </button>
+                </div>
+              ) : (
+                clients.map((client) => (
+                  <div
+                    key={client.id}
+                    onClick={() => {
+                      switchClient(client.id);
+                      setIsClientDropdownOpen(false);
+                    }}
+                    style={{
+                      padding: '8px 10px',
+                      borderRadius: 'var(--radius-sm)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: '2px',
+                      backgroundColor: client.id === currentClient.id ? 'var(--bg-subtle)' : 'transparent'
+                    }}
+                    className="glass-panel-hover"
+                  >
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{ fontSize: '0.82rem', fontWeight: 600 }}>{client.name}</span>
@@ -243,7 +258,8 @@ export const Header: React.FC = () => {
                   </div>
                   {client.id === currentClient.id && <CheckCircle2 size={16} color="var(--primary-500)" />}
                 </div>
-              ))}
+                ))
+              )}
             </div>
           )}
         </div>
@@ -340,25 +356,8 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Right Section: AI Assistant, Notifications, Role Badge & User Profile */}
+      {/* Right Section: Notifications, Role Badge & User Profile */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* AI Assistant Button */}
-        <button
-          onClick={() => setIsAiDrawerOpen(true)}
-          className="btn btn-secondary btn-sm pulse-ai"
-          style={{
-            background: 'linear-gradient(135deg, #FAF5FF, #EEF2FF)',
-            borderColor: '#DDD6FE',
-            color: '#6D28D9',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px'
-          }}
-        >
-          <Sparkles size={15} color="#7C3AED" />
-          <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>AI Copilot</span>
-        </button>
-
         {/* Notifications */}
         <button
           onClick={() => setIsNotificationDrawerOpen(true)}
@@ -489,27 +488,39 @@ export const Header: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between' }}>
+              <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <button
                   onClick={() => {
-                    setActiveView('settings');
+                    setIsProfileModalOpen(true);
                     setIsUserDropdownOpen(false);
                   }}
-                  className="btn btn-secondary btn-sm"
-                  style={{ width: '48%' }}
+                  className="btn btn-primary btn-sm"
+                  style={{ width: '100%', justifyContent: 'center' }}
                 >
-                  Settings
+                  My Practice Profile & CA ID
                 </button>
-                <button
-                  onClick={() => {
-                    logout();
-                    setIsUserDropdownOpen(false);
-                  }}
-                  className="btn btn-outline-danger btn-sm"
-                  style={{ width: '48%' }}
-                >
-                  <LogOut size={13} /> Sign Out
-                </button>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <button
+                    onClick={() => {
+                      setActiveView('settings');
+                      setIsUserDropdownOpen(false);
+                    }}
+                    className="btn btn-secondary btn-sm"
+                    style={{ width: '48%' }}
+                  >
+                    Settings
+                  </button>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setIsUserDropdownOpen(false);
+                    }}
+                    className="btn btn-outline-danger btn-sm"
+                    style={{ width: '48%' }}
+                  >
+                    <LogOut size={13} /> Sign Out
+                  </button>
+                </div>
               </div>
             </div>
           )}

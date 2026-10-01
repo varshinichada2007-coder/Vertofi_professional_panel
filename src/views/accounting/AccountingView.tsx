@@ -36,8 +36,8 @@ export const AccountingView: React.FC = () => {
 
   // New Voucher Form
   const [narration, setNarration] = useState('');
-  const [debitAccountId, setDebitAccountId] = useState(accounts[0].id);
-  const [creditAccountId, setCreditAccountId] = useState(accounts[1].id);
+  const [debitAccountId, setDebitAccountId] = useState(accounts[0]?.id || '');
+  const [creditAccountId, setCreditAccountId] = useState(accounts[1]?.id || '');
   const [amount, setAmount] = useState('250000');
   const [referenceDoc, setReferenceDoc] = useState('VOUCHER-REF-991');
 
@@ -46,6 +46,10 @@ export const AccountingView: React.FC = () => {
     const numAmount = parseFloat(amount) || 0;
     const debitAcc = accounts.find((a) => a.id === debitAccountId) || accounts[0];
     const creditAcc = accounts.find((a) => a.id === creditAccountId) || accounts[1];
+
+    if (!debitAcc || !creditAcc) {
+      return;
+    }
 
     submitJournalEntry({
       narration,

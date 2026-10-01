@@ -28,6 +28,18 @@ export const AccountsReceivableView: React.FC = () => {
 
   const customerInvoices = invoices.filter((i) => i.partyType === 'CUSTOMER');
 
+  // ── Computed stats from real data ──
+  const totalOutstanding = customerInvoices
+    .filter((i) => i.status !== 'PAID')
+    .reduce((sum, i) => sum + (i.amountDue || 0), 0);
+  const uniqueClients = new Set(customerInvoices.map((i) => i.clientId)).size;
+  const irnSuccess = customerInvoices.length > 0
+    ? Math.round((customerInvoices.filter((i) => i.qrCodeGenerated).length / customerInvoices.length) * 100)
+    : 0;
+  // Simple DSO: (AR Outstanding / Total Revenue) * 30
+  const totalRevenue = customerInvoices.reduce((sum, i) => sum + (i.grandTotal || 0), 0);
+  const dso = totalRevenue > 0 ? Math.round((totalOutstanding / totalRevenue) * 30) : 0;
+
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const numAmt = parseFloat(amount) || 0;
@@ -84,17 +96,27 @@ export const AccountsReceivableView: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
         <div className="glass-panel" style={{ padding: '16px' }}>
           <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>TOTAL AR OUTSTANDING</div>
-          <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--info-500)' }}>₹22,84,000</div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>Across 8 Enterprise Clients</div>
+          <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--info-500)' }}>
+            {totalOutstanding > 0 ? `₹${totalOutstanding.toLocaleString('en-IN')}` : '—'}
+          </div>
+          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+            {uniqueClients > 0 ? `Across ${uniqueClients} Client${uniqueClients > 1 ? 's' : ''}` : 'No invoices yet'}
+          </div>
         </div>
         <div className="glass-panel" style={{ padding: '16px' }}>
           <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>DAYS SALES OUTSTANDING (DSO)</div>
-          <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--success-500)' }}>34 Days</div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--success-500)', marginTop: '2px' }}>11 Days below industry benchmark</div>
+          <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--success-500)' }}>
+            {dso > 0 ? `${dso} Days` : '—'}
+          </div>
+          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+            {customerInvoices.length > 0 ? 'Based on current receivables' : 'Create invoices to track DSO'}
+          </div>
         </div>
         <div className="glass-panel" style={{ padding: '16px' }}>
           <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>E-INVOICE (IRN) SUCCESS RATE</div>
-          <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--primary-500)' }}>100%</div>
+          <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--primary-500)' }}>
+            {customerInvoices.length > 0 ? `${irnSuccess}%` : '—'}
+          </div>
           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>NIC IRP Direct API Active</div>
         </div>
       </div>

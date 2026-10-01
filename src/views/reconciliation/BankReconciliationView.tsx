@@ -15,7 +15,7 @@ import { useApp } from '../../context/AppContext';
 
 export const BankReconciliationView: React.FC = () => {
   const { bankAccounts, bankTransactions, reconcileTransaction, showToast } = useApp();
-  const [selectedAccountId, setSelectedAccountId] = useState(bankAccounts[0].id);
+  const [selectedAccountId, setSelectedAccountId] = useState(bankAccounts[0]?.id || '');
 
   const currentAccount = bankAccounts.find((b) => b.id === selectedAccountId) || bankAccounts[0];
 

@@ -22,11 +22,15 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import { LineageViewer } from '../../components/common/LineageViewer';
 
 export const Client360View: React.FC = () => {
+  const { currentUser } = useAuth();
   const {
     currentClient,
+    clients,
+    createClient,
     accounts,
     journalEntries,
     invoices,
@@ -36,9 +40,17 @@ export const Client360View: React.FC = () => {
     documents,
     riskExceptions,
     auditLogs,
-    setActiveView,
-    setIsAiDrawerOpen
+    setActiveView
   } = useApp();
+
+  const [newClientName, setNewClientName] = useState('');
+  const [newLegalName, setNewLegalName] = useState('');
+  const [newIndustry, setNewIndustry] = useState('Technology & SaaS');
+  const [newPan, setNewPan] = useState('');
+  const [newGstin, setNewGstin] = useState('');
+  const [newTurnover, setNewTurnover] = useState('10000000');
+  const [newContactPerson, setNewContactPerson] = useState('');
+  const [newContactEmail, setNewContactEmail] = useState('');
 
   type TabKey =
     | 'OVERVIEW'
@@ -70,6 +82,121 @@ export const Client360View: React.FC = () => {
     { key: 'COMMUNICATION', label: 'Communication', icon: MessageSquare },
     { key: 'TIMELINE', label: 'Activity Lineage', icon: History }
   ];
+
+  if (!currentClient || !currentClient.id) {
+    return (
+      <div style={{ padding: '32px 24px', maxWidth: '800px', margin: '0 auto' }}>
+        <div className="glass-panel" style={{ padding: '32px', textAlign: 'center' }}>
+          <div
+            style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '16px',
+              background: 'rgba(99, 102, 241, 0.1)',
+              color: 'var(--primary-600)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px'
+            }}
+          >
+            <Building size={32} />
+          </div>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '8px' }}>No Client Entity Selected</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px', maxWidth: '520px', margin: '0 auto 24px' }}>
+            Your database is clean and has no active client records. Register your first business or enterprise client below to activate the complete 360° compliance & financial workbench.
+          </p>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!newClientName.trim()) return;
+              createClient({
+                name: newClientName,
+                legalName: newLegalName || newClientName,
+                industry: newIndustry,
+                pan: newPan || 'AABCP1234K',
+                gstin: newGstin || '27AABCP1234K1Z5',
+                annualTurnover: Number(newTurnover) || 10000000,
+                contactPerson: newContactPerson || currentUser.name,
+                contactEmail: newContactEmail || currentUser.email
+              });
+            }}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: '16px',
+              textAlign: 'left',
+              background: 'var(--bg-card)',
+              padding: '24px',
+              borderRadius: '12px',
+              border: '1px solid var(--border-subtle)'
+            }}
+          >
+            <div>
+              <label style={{ fontSize: '0.78rem', fontWeight: 600, display: 'block', marginBottom: '6px' }}>Client Business Name *</label>
+              <input
+                className="input-field"
+                placeholder="e.g. Acme Tech Solutions"
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.78rem', fontWeight: 600, display: 'block', marginBottom: '6px' }}>Legal Entity Name</label>
+              <input
+                className="input-field"
+                placeholder="e.g. Acme Tech Solutions Pvt Ltd"
+                value={newLegalName}
+                onChange={(e) => setNewLegalName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.78rem', fontWeight: 600, display: 'block', marginBottom: '6px' }}>Industry Sector</label>
+              <input
+                className="input-field"
+                value={newIndustry}
+                onChange={(e) => setNewIndustry(e.target.value)}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.78rem', fontWeight: 600, display: 'block', marginBottom: '6px' }}>PAN</label>
+              <input
+                className="input-field font-mono"
+                placeholder="ABCDE1234F"
+                value={newPan}
+                onChange={(e) => setNewPan(e.target.value.toUpperCase())}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.78rem', fontWeight: 600, display: 'block', marginBottom: '6px' }}>GSTIN</label>
+              <input
+                className="input-field font-mono"
+                placeholder="27ABCDE1234F1Z5"
+                value={newGstin}
+                onChange={(e) => setNewGstin(e.target.value.toUpperCase())}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.78rem', fontWeight: 600, display: 'block', marginBottom: '6px' }}>Key Contact Person</label>
+              <input
+                className="input-field"
+                placeholder="Primary Director / CXO"
+                value={newContactPerson}
+                onChange={(e) => setNewContactPerson(e.target.value)}
+              />
+            </div>
+            <div style={{ gridColumn: '1 / -1', marginTop: '8px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button type="submit" className="btn btn-primary" style={{ padding: '10px 24px', fontWeight: 600 }}>
+                <Plus size={16} /> Onboard Client Entity
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -122,9 +249,6 @@ export const Client360View: React.FC = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={() => setIsAiDrawerOpen(true)} className="btn btn-secondary btn-sm pulse-ai" style={{ color: 'var(--ai-purple)' }}>
-            <Sparkles size={14} /> AI Copilot Deep Dive
-          </button>
           <button onClick={() => setActiveView('tasks')} className="btn btn-primary btn-sm">
             <Plus size={14} /> New Task
           </button>
@@ -206,8 +330,8 @@ export const Client360View: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.8rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid var(--border-subtle)' }}>
                   <div>
-                    <div style={{ fontWeight: 700 }}>CA Vikramaditya Sharma</div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Lead CA & Partner Signoff</div>
+                    <div style={{ fontWeight: 700 }}>{currentUser.name || 'Lead Practitioner'}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{currentUser.role || 'Lead CA & Partner Signoff'}</div>
                   </div>
                   <span className="badge badge-success">Lead Partner</span>
                 </div>

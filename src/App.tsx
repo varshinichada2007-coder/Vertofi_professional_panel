@@ -5,8 +5,8 @@ import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { GlobalSearchModal } from './components/layout/GlobalSearchModal';
 import { NotificationDrawer } from './components/layout/NotificationDrawer';
-import { AiDrawer } from './components/layout/AiDrawer';
 import { ToastContainer } from './components/layout/ToastContainer';
+import { UserProfileModal } from './components/profile/UserProfileModal';
 
 // Views
 import { LoginView } from './views/auth/LoginView';
@@ -29,17 +29,39 @@ import { AnalyticsView } from './views/analytics/AnalyticsView';
 import { ProfessionalNetworkView } from './views/network/ProfessionalNetworkView';
 import { BhsView } from './views/bhs/BhsView';
 import { SettingsView } from './views/settings/SettingsView';
+import { ProfileView } from './views/profile/ProfileView';
+import { ClientQueriesView } from './views/queries/ClientQueriesView';
+import { BusinessSyncView } from './views/businessSync/BusinessSyncView';
+
+const LoadingScreen: React.FC = () => (
+  <div style={{
+    position: 'fixed', inset: 0,
+    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+    background: 'var(--bg-app, #f8faff)',
+    gap: '20px',
+    zIndex: 9999
+  }}>
+    <div style={{
+      width: 56, height: 56,
+      border: '4px solid var(--border-color, #e2e8f0)',
+      borderTopColor: 'var(--color-primary, #4F46E5)',
+      borderRadius: '50%',
+      animation: 'spin 0.8s linear infinite'
+    }} />
+    <div style={{ textAlign: 'center' }}>
+      <p style={{ fontWeight: 700, fontSize: 18, color: 'var(--text-primary, #1e293b)', margin: 0 }}>Vertofi</p>
+      <p style={{ fontSize: 13, color: 'var(--text-secondary, #64748b)', margin: '4px 0 0' }}>Connecting to database…</p>
+    </div>
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+);
 
 const MainLayout: React.FC = () => {
   const { isAuthenticated } = useAuth();
-  const { activeView, setIsAiDrawerOpen } = useApp();
+  const { activeView, isLoading } = useApp();
   const [isOnboardingActive, setIsOnboardingActive] = useState(false);
 
-  useEffect(() => {
-    if (activeView === 'ai-assistant') {
-      setIsAiDrawerOpen(true);
-    }
-  }, [activeView, setIsAiDrawerOpen]);
+  if (isLoading) return <LoadingScreen />;
 
   if (!isAuthenticated) {
     if (isOnboardingActive) {
@@ -84,10 +106,14 @@ const MainLayout: React.FC = () => {
         return <ProfessionalNetworkView />;
       case 'bhs':
         return <BhsView />;
-      case 'ai-assistant':
-        return <DashboardView />;
       case 'settings':
         return <SettingsView />;
+      case 'profile':
+        return <ProfileView />;
+      case 'queries':
+        return <ClientQueriesView />;
+      case 'business-sync':
+        return <BusinessSyncView />;
       default:
         return <DashboardView />;
     }
@@ -107,9 +133,9 @@ const MainLayout: React.FC = () => {
       </div>
 
       {/* Global Modals, Drawers & Toasts */}
+      <UserProfileModal />
       <GlobalSearchModal />
       <NotificationDrawer />
-      <AiDrawer />
       <ToastContainer />
     </div>
   );

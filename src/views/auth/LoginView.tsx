@@ -19,7 +19,8 @@ import {
   RefreshCw,
   AlertCircle,
   Check,
-  ArrowLeft
+  ArrowLeft,
+  Phone
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../types';
@@ -36,6 +37,8 @@ export const LoginView: React.FC<{ onStartOnboarding?: () => void }> = () => {
   const [selectedRole, setSelectedRole] = useState<UserRole>('CA');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [maskedRecipient, setMaskedRecipient] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [firmName, setFirmName] = useState('');
@@ -45,7 +48,6 @@ export const LoginView: React.FC<{ onStartOnboarding?: () => void }> = () => {
 
   // 2FA State
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
-  const [generatedOtp, setGeneratedOtp] = useState<string>('');
   const [otpTimer, setOtpTimer] = useState<number>(60);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
@@ -66,13 +68,13 @@ export const LoginView: React.FC<{ onStartOnboarding?: () => void }> = () => {
     };
   }, [step, otpTimer]);
 
-  const handleCredentialsSubmit = (e: React.FormEvent) => {
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
 
     if (authMode === 'SIGNUP') {
-      if (!fullName.trim() || !email.trim() || !password) {
-        setErrorMessage('Please fill in all mandatory fields.');
+      if (!fullName.trim() || !email.trim() || !password || !phone.trim()) {
+        setErrorMessage('Please fill in all mandatory fields including your mobile phone number.');
         return;
       }
       if (password !== confirmPassword) {
@@ -86,13 +88,19 @@ export const LoginView: React.FC<{ onStartOnboarding?: () => void }> = () => {
       }
     }
 
-    // Trigger authentic 2FA OTP code
-    const otp = sendTwoFactorOtp(email);
-    setGeneratedOtp(otp);
-    setOtpTimer(60);
-    setOtpDigits(['', '', '', '', '', '']);
-    setStep('MFA');
-    setSuccessMessage(`Security Code sent to ${email}`);
+    setIsVerifying(true);
+    try {
+      const res = await sendTwoFactorOtp(email.trim(), phone.trim());
+      setIsVerifying(false);
+      setMaskedRecipient(res.maskedRecipient || phone || email);
+      setOtpTimer(60);
+      setOtpDigits(['', '', '', '', '', '']);
+      setStep('MFA');
+      setSuccessMessage(res.message || `Verification SMS sent.`);
+    } catch {
+      setIsVerifying(false);
+      setErrorMessage('Could not send verification code. Please check your network and try again.');
+    }
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -124,7 +132,7 @@ export const LoginView: React.FC<{ onStartOnboarding?: () => void }> = () => {
     }
   };
 
-  const handleVerify2Fa = (e: React.FormEvent) => {
+  const handleVerify2Fa = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     const fullOtp = otpDigits.join('');
@@ -135,39 +143,42 @@ export const LoginView: React.FC<{ onStartOnboarding?: () => void }> = () => {
     }
 
     setIsVerifying(true);
+    const isValid = await verifyTwoFactorOtp(fullOtp, email.trim(), phone.trim());
 
-    setTimeout(() => {
-      const isValid = verifyTwoFactorOtp(fullOtp);
-
-      if (isValid) {
-        if (authMode === 'SIGNUP') {
-          signUp({
-            name: fullName || 'Verified Financial Professional',
-            email,
-            role: selectedRole,
-            firmName: firmName || 'Chartered Financial & Advisory Practice',
-            membershipNumber: membershipNumber || 'FCA-084920',
-            copNumber: copNumber || 'COP-409218'
-          });
-        } else {
-          login(email, selectedRole, {
-            name: fullName || (email.startsWith('vikram') ? 'CA Vikramaditya Sharma' : 'Authorized Practitioner'),
-            firmName: firmName || 'Sharma & Venkatesh Chartered Accountants'
-          });
-        }
+    if (isValid) {
+      if (authMode === 'SIGNUP') {
+        signUp({
+          name: fullName.trim() || 'Practicing Professional',
+          email: email.trim(),
+          phone: phone.trim(),
+          role: selectedRole,
+          firmName: firmName.trim() || `${fullName.trim() || 'Professional'}'s Practice`,
+          membershipNumber: membershipNumber.trim() || undefined,
+          copNumber: copNumber.trim() || undefined
+        });
       } else {
-        setIsVerifying(false);
-        setErrorMessage('Invalid verification code. Please check and try again.');
+        await login(email.trim(), selectedRole, {
+          name: fullName.trim() || undefined,
+          phone: phone.trim() || undefined,
+          firmName: firmName.trim() || undefined
+        });
       }
-    }, 600);
+    } else {
+      setIsVerifying(false);
+      setErrorMessage('Invalid or expired verification code. Please check your phone messages and try again.');
+    }
   };
 
-  const handleResendOtp = () => {
-    const otp = sendTwoFactorOtp(email);
-    setGeneratedOtp(otp);
-    setOtpTimer(60);
-    setOtpDigits(['', '', '', '', '', '']);
-    setSuccessMessage(`New security code sent.`);
+  const handleResendOtp = async () => {
+    try {
+      const res = await sendTwoFactorOtp(email.trim(), phone.trim());
+      setMaskedRecipient(res.maskedRecipient || phone || email);
+      setOtpTimer(60);
+      setOtpDigits(['', '', '', '', '', '']);
+      setSuccessMessage(`New verification code sent via SMS.`);
+    } catch {
+      setErrorMessage('Could not resend SMS. Please wait and try again.');
+    }
   };
 
   return (
@@ -297,7 +308,7 @@ export const LoginView: React.FC<{ onStartOnboarding?: () => void }> = () => {
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. CA Vikramaditya Sharma, FCA"
+                      placeholder="e.g. CA Rajesh Kumar, FCA"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       className="input-field"
@@ -315,7 +326,7 @@ export const LoginView: React.FC<{ onStartOnboarding?: () => void }> = () => {
                       <Building size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
                       <input
                         type="text"
-                        placeholder="e.g. Sharma & Venkatesh Chartered Accountants"
+                        placeholder="e.g. Apex Partners & Chartered Accountants"
                         value={firmName}
                         onChange={(e) => setFirmName(e.target.value)}
                         className="input-field"
@@ -343,6 +354,26 @@ export const LoginView: React.FC<{ onStartOnboarding?: () => void }> = () => {
                     />
                   </div>
                 </div>
+
+                {authMode === 'SIGNUP' && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                      Mobile Phone Number (for 2-Step SMS Verification)
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <Phone size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+                      <input
+                        type="tel"
+                        placeholder="e.g. +91 98765 43210"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="input-field"
+                        style={{ paddingLeft: '38px' }}
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
@@ -468,49 +499,33 @@ export const LoginView: React.FC<{ onStartOnboarding?: () => void }> = () => {
                   Two-Factor Authentication
                 </h3>
                 <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.4 }}>
-                  Enter the 6-digit security verification code dispatched to <strong>{email}</strong>
+                  Enter the 6-digit security code sent via SMS to <strong>{maskedRecipient || phone || email}</strong>
                 </p>
               </div>
 
-              {/* Real 2FA OTP Alert Box with Code */}
-              {generatedOtp && (
-                <div
-                  style={{
-                    background: '#F0FDF4',
-                    border: '1px solid #BBF7D0',
-                    borderRadius: '10px',
-                    padding: '10px 14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    fontSize: '0.78rem',
-                    color: '#166534'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <CheckCircle2 size={16} color="#16A34A" />
-                    <span>Your Verification OTP: <strong className="font-mono" style={{ fontSize: '0.95rem' }}>{generatedOtp}</strong></span>
+              {/* Secure SMS Dispatch Notice */}
+              <div
+                style={{
+                  background: '#EEF2FF',
+                  border: '1px solid #C7D2FE',
+                  borderRadius: '10px',
+                  padding: '12px 14px',
+                  marginBottom: '18px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  fontSize: '0.78rem',
+                  color: '#3730A3'
+                }}
+              >
+                <ShieldCheck size={20} color="#4F46E5" />
+                <div>
+                  <div style={{ fontWeight: 700 }}>Real-Time SMS Verification Dispatched</div>
+                  <div style={{ fontSize: '0.72rem', color: '#4338CA', marginTop: '2px' }}>
+                    Please check your phone text messages for your 6-digit one-time code.
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOtpDigits(generatedOtp.split(''));
-                    }}
-                    style={{
-                      background: '#DCFCE7',
-                      border: '1px solid #86EFAC',
-                      borderRadius: '6px',
-                      padding: '2px 8px',
-                      fontSize: '0.7rem',
-                      fontWeight: 700,
-                      color: '#15803D',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Auto-Fill
-                  </button>
                 </div>
-              )}
+              </div>
 
               {/* 6 Individual Digit Inputs */}
               <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }} onPaste={handleOtpPaste}>

@@ -11,9 +11,11 @@ import {
   Download
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 
 export const AnalyticsView: React.FC = () => {
   const { clients, tasks, showToast } = useApp();
+  const { currentUser } = useAuth();
 
   return (
     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -60,10 +62,16 @@ export const AnalyticsView: React.FC = () => {
         <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '14px' }}>Professional Team Capacity & Allocation</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '14px' }}>
           {[
-            { name: 'CA Vikramaditya Sharma', role: 'Senior Partner / CA', activeTasks: 8, capacity: 85, score: 98 },
-            { name: 'CMA Rajeshwari Nair', role: 'Cost & Management CMA', activeTasks: 6, capacity: 70, score: 95 },
-            { name: 'CS Ananya Deshmukh', role: 'Company Secretary FCS', activeTasks: 5, capacity: 60, score: 99 },
-            { name: 'Rohan Mehta', role: 'Senior Accountant', activeTasks: 12, capacity: 92, score: 94 }
+            {
+              name: currentUser.name || 'Lead Practitioner',
+              role: currentUser.role ? `${currentUser.role} (Primary User)` : 'Lead Partner / CA',
+              activeTasks: tasks.filter((t) => t.status !== 'COMPLETED').length,
+              capacity: Math.min(100, Math.max(20, tasks.length * 10)),
+              score: 98
+            },
+            { name: 'CMA Rajeshwari Nair', role: 'Cost & Management CMA', activeTasks: 0, capacity: 40, score: 95 },
+            { name: 'CS Ananya Deshmukh', role: 'Company Secretary FCS', activeTasks: 0, capacity: 35, score: 99 },
+            { name: 'Rohan Mehta', role: 'Senior Accountant', activeTasks: 0, capacity: 50, score: 94 }
           ].map((member, i) => (
             <div key={i} style={{ padding: '14px', background: 'var(--bg-subtle)', borderRadius: 'var(--radius-sm)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>

@@ -112,13 +112,31 @@ export const ClientsListView: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredClients.map((client) => (
-              <tr
-                key={client.id}
-                onClick={() => handleOpenClient360(client.id)}
-                style={{ cursor: 'pointer' }}
-                className="glass-panel-hover"
-              >
+            {filteredClients.length === 0 ? (
+              <tr>
+                <td colSpan={9} style={{ textAlign: 'center', padding: '48px 24px' }}>
+                  <Building size={36} color="var(--text-muted)" style={{ margin: '0 auto 12px' }} />
+                  <div style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '6px' }}>No Client Entities Found</div>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: '16px' }}>
+                    {clients.length === 0
+                      ? 'No business clients exist in MongoDB yet. Onboard your first client to start managing compliance, books, and taxes.'
+                      : 'No clients match your filter or search criteria.'}
+                  </p>
+                  {clients.length === 0 && (
+                    <button onClick={() => setActiveView('client-360')} className="btn btn-primary btn-sm">
+                      <Plus size={14} /> Onboard First Client
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ) : (
+              filteredClients.map((client) => (
+                <tr
+                  key={client.id}
+                  onClick={() => handleOpenClient360(client.id)}
+                  style={{ cursor: 'pointer' }}
+                  className="glass-panel-hover"
+                >
                 <td>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div
@@ -195,7 +213,8 @@ export const ClientsListView: React.FC = () => {
                   </button>
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>

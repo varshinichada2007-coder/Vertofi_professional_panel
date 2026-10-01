@@ -20,6 +20,14 @@ export const AccountsPayableView: React.FC = () => {
 
   const vendorBills = invoices.filter((i) => i.partyType === 'VENDOR');
 
+  // ── Computed stats from real data ──
+  const totalPayables = vendorBills
+    .filter((i) => i.status !== 'PAID')
+    .reduce((sum, i) => sum + (i.amountDue || 0), 0);
+  const uniqueVendors = new Set(vendorBills.map((i) => i.partyName)).size;
+  const totalCOGS = vendorBills.reduce((sum, i) => sum + (i.grandTotal || 0), 0);
+  const dpo = totalCOGS > 0 ? Math.round((totalPayables / totalCOGS) * 30) : 0;
+
   const handleReleaseBatch = () => {
     showToast(
       'Maker-Checker Payment Batch Submitted',
@@ -52,18 +60,26 @@ export const AccountsPayableView: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
         <div className="glass-panel" style={{ padding: '16px' }}>
           <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>OUTSTANDING PAYABLES (AP)</div>
-          <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--warning-500)' }}>₹11,45,000</div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>Across 14 active vendor contracts</div>
+          <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--warning-500)' }}>
+            {totalPayables > 0 ? `₹${totalPayables.toLocaleString('en-IN')}` : '—'}
+          </div>
+          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+            {uniqueVendors > 0 ? `Across ${uniqueVendors} vendor${uniqueVendors > 1 ? 's' : ''}` : 'No vendor bills yet'}
+          </div>
         </div>
         <div className="glass-panel" style={{ padding: '16px' }}>
           <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>DAYS PAYABLE OUTSTANDING (DPO)</div>
-          <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--success-500)' }}>28 Days</div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>Optimized supplier cash terms</div>
+          <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--success-500)' }}>
+            {dpo > 0 ? `${dpo} Days` : '—'}
+          </div>
+          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+            {vendorBills.length > 0 ? 'Based on current payables' : 'Add vendor bills to track DPO'}
+          </div>
         </div>
         <div className="glass-panel" style={{ padding: '16px', border: '1px solid var(--danger-border)' }}>
           <div style={{ fontSize: '0.74rem', color: 'var(--danger-500)', fontWeight: 600 }}>DUPLICATE BILL DETECTIONS</div>
-          <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--danger-500)' }}>1 Quarantined</div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--danger-500)', marginTop: '2px' }}>FastLogix bill #FL-1082A on hold</div>
+          <div style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '4px', color: 'var(--danger-500)' }}>0 Quarantined</div>
+          <div style={{ fontSize: '0.72rem', color: 'var(--danger-500)', marginTop: '2px' }}>AI duplicate engine active</div>
         </div>
       </div>
 
